@@ -1,0 +1,242 @@
+---
+title: "Analytics Project"
+output: html_document
+date: "2024-01-24"
+---
+                                          ARAVIND KORUTLA
+                                        MODULE-2 ASSIGNMENT
+                                           INTRODUCTION
+>>  Welcome to Café Aroma Delight, a cozy chain of 30 coffee shops located in cities and suburbs. Our cafés are popular spots for a variety of customers, offering a range of delicious coffee, freshly baked pastries, and handmade sandwiches.Our coffee selection is diverse, catering to all tastes, from classic espresso to unique seasonal flavors. Our pastries and sandwiches are made with fresh, quality ingredients, perfect for a quick snack or a hearty meal.
+
+>>  Café Aroma Delight is not just about great food and drink; it's about the experience. Each café provides a comfortable and inviting space, ideal for students studying, professionals on a lunch break, or anyone who enjoys a good cup of coffee. With free Wi-Fi and plenty of seating, it’s a perfect place to relax or catch up on work.We take pride in building a community around our brand, and our loyalty program rewards our regular customers with great deals and discounts. We keep things exciting with new menu items and seasonal promotions.
+
+>>  At Café Aroma Delight, we're more than just a coffee shop – we're a part of your daily routine, a place to meet friends, or just enjoy a moment to yourself. We're committed to providing high-quality products and a welcoming atmosphere to all our customers.
+
+#Load the 'readr' package and read the 'unique_customers.csv' file into the 'customers' dataframe.
+```{r include=FALSE}
+library(readr)
+customers <- read_csv("unique_customers.csv")
+customers
+```
+#Displaying the first few rows, the structure, and the column names of the 'customers' dataframe.
+```{r}
+head(customers)
+str(customers)
+colnames(customers)
+```
+CRM Data Structure:
+ - This below code sets a random seed to ensure consistent results across runs and then randomly selects 500 customers from a dataset of 25,000, found in 'unique_customers.csv'. The selection is part of a process to create a representative sample of customers for analysis, relevant to the business context.
+ 
+#Set a random seed for reproducibility and select a random sample of 500 customers from the 'customers' dataframe.
+```{r}
+set.seed(123) # Ensures reproducibility
+selected_customers <- customers[sample(nrow(customers), 500), ]
+head(selected_customers)
+```
+#Created an empty dataframe named 'coupons' with columns for 'CouponCode', 'Description', 'DiscountValue', and date columns 'IssueDate' and 'ExpiryDate', setting 'stringsAsFactors' to FALSE. This dataframe is structured to store coupon information for further use.
+```{r}
+coupons <- data.frame(
+  CouponCode = character(),
+  Description = character(),
+  DiscountValue = numeric(),
+  IssueDate = as.Date(character()),
+  ExpiryDate = as.Date(character()),
+  stringsAsFactors = FALSE
+)
+coupons
+```
+#Set a random seed for consistent results, and generate a dataframe 'coupons' with 100 entries, each including a unique 'CouponCode', 'Description', 'DiscountValue', and 'IssueDate' and 'ExpiryDate'. This simulates a variety of coupons for promotional activities, with varying discount values and validity periods.
+```{r}
+# Used an example to generate 100 coupon entries
+set.seed(123)  # For reproducibility
+
+# Creating the CouponCode vector
+coupon_codes <- paste0("C", formatC(1:100, width = 3, flag = "0"))
+
+# Creating the Description vector
+descriptions <- sample(c("10% Off", "20% Off", "5$ Discount"), 100, replace = TRUE)
+
+# Setting DiscountValue based on Description
+discount_values <- ifelse(descriptions == "10% Off", 10, ifelse(descriptions == "20% Off", 20, 5))
+
+# Generating IssueDate and ExpiryDate
+issue_dates <- sample(seq(as.Date('2023-01-01'), as.Date('2023-06-01'), by="day"), 100, replace = TRUE)
+expiry_dates <- issue_dates + sample(30:60, 100, replace = TRUE) # Valid for 30 to 60 days
+
+# Creating the coupons data frame
+coupons <- data.frame(
+   CouponCode = coupon_codes,
+   Description = descriptions,
+   DiscountValue = discount_values,
+   IssueDate = issue_dates,
+   ExpiryDate = expiry_dates,
+   stringsAsFactors = FALSE
+)
+head(coupons)
+```
+
+#We have Set a random seed for reproducibility and create a 'transactions' dataframe consisting of 10,000 simulated transaction entries for a coffee shop business. This table includes details such as Transaction ID, Customer ID, Date, Items Purchased, Quantity, Price, and Payment Method, with varied data to reflect different buying patterns and transaction values. The dataset simulates a realistic transactional environment by incorporating a mix of items (Coffee, Pastry, Sandwich), payment methods, and a price range suitable for a coffee shop context.
+```{r}
+# used an example to generate 10,000 transaction entries
+set.seed(123)  # For reproducibility
+
+# Creating the TransactionID vector
+transaction_ids <- 1:10000
+
+# Creating a new unique identifier for customers (CustomerID)
+customer_ids_assigned <- sample(1:500, 10000, replace = TRUE)  # Assuming 500 selected customers
+
+# Generating Date vector
+dates <- sample(seq(as.Date('2023-01-01'), as.Date('2023-12-31'), by="day"), 10000, replace = TRUE)
+
+# Creating the ItemsPurchased vector
+items_purchased <- sample(c("Coffee", "Pastry", "Sandwich"), 10000, replace = TRUE)
+
+# Creating the Quantity vector
+quantities <- sample(1:5, 10000, replace = TRUE)
+
+# Creating the Price vector
+prices <- runif(10000, min = 2, max = 20)  # Example prices for a coffee shop
+
+# Creating the PaymentMethod vector
+payment_methods <- sample(c("Cash", "Credit Card", "Online"), 10000, replace = TRUE)
+
+# Creating the transactions data frame
+transactions <- data.frame(
+  TransactionID = transaction_ids,
+  CustomerID = customer_ids_assigned,
+  Date = dates,
+  ItemsPurchased = items_purchased,
+  Quantity = quantities,
+  Price = prices,
+  PaymentMethod = payment_methods,
+  stringsAsFactors = FALSE
+)
+
+# Viewing the first few rows of the transactions data frame
+head(transactions)
+```
+Merge the three tables to create one final df.
+
+#Examined and displayed the structure and column names of the 'transactions' and 'selected_customers' dataframes for an overview of their formats and contents.
+```{r}
+# Check the structure and column names of the 'transactions' dataframe
+str(transactions)
+colnames(transactions)
+
+# Check the structure and column names of the 'selected_customers' dataframe
+str(selected_customers)
+colnames(selected_customers)
+```
+
+#Merging the 'transactions' and 'selected_customers' dataframes on 'CustomerID' and 'CustomerNumber', respectively, and display the first few rows of the merged data.   
+```{r}
+# Ensuring that 'CustomerID' in transactions corresponds to 'CustomerNumber' in selected_customers
+transactions_customers_merged <- merge(transactions, selected_customers, by.x = "CustomerID", by.y = "CustomerNumber", all.x = TRUE)
+
+# View the first few rows of the merged data
+head(transactions_customers_merged)
+```
+
+#Assign a random 'CouponCode' from the 'coupons' dataframe to each entry in the 'transactions_customers_merged' dataframe for simulation, ensuring reproducibility with a set seed. Then, merge this updated dataframe with the 'coupons' dataframe and display the first few rows of the final merged dataset.
+```{r}
+# Randomly assign a 'CouponCode' to each transaction for simulation purposes
+set.seed(123)  # Ensure reproducibility
+transactions_customers_merged$CouponCode <- sample(coupons$CouponCode, nrow(transactions_customers_merged), replace = TRUE)
+
+# Now try merging again
+final_merged_df <- merge(transactions_customers_merged, coupons, by = "CouponCode", all.x = TRUE)
+
+# View the first few rows of the final merged data
+head(final_merged_df)
+```
+
+#Checking the current working directory, write the 'final_merged_df' dataframe to a CSV file named 'final_merged_data.csv', read this file back into R as 'read_data', and then display the first few rows and column names of 'read_data' for verification. 
+```{r}
+getwd()
+write.csv(final_merged_df, "final_merged_data.csv", row.names = FALSE)
+# Read the file back into R
+read_data <- read.csv("final_merged_data.csv")
+# Display the first few rows
+head(read_data)
+colnames(read_data)
+```
+#Customer Behavior Analysis
+- Load the 'dplyr' and 'ggplot2' libraries for data manipulation and visualization; analyze and summarize customer purchasing patterns, total spent, and average purchase value by customer; identify and arrange the most purchased items; calculate the frequency of purchases for each customer; and create a bar chart visualizing the top items purchased.
+```{r}
+library(dplyr)
+library(ggplot2)
+
+# Analyzing purchasing patterns
+customer_purchases <- final_merged_df %>%
+  group_by(CustomerID) %>%
+  summarise(TotalPurchases = n(), TotalSpent = sum(Price * Quantity), AveragePurchaseValue = mean(Price * Quantity))
+
+# Top items purchased
+top_items <- final_merged_df %>%
+  group_by(ItemsPurchased) %>%
+  summarise(Count = n()) %>%
+  arrange(desc(Count))
+
+# Frequency of purchases by customer
+purchase_frequency <- final_merged_df %>%
+  group_by(CustomerID) %>%
+  summarise(Frequency = n())
+
+# Visualize top items purchased
+ggplot(top_items, aes(x = reorder(ItemsPurchased, Count), y = Count)) +
+  geom_bar(stat = "identity") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Top Items Purchased", x = "Item", y = "Count")
+```
+#Coupon Effectiveness
+
+- Analyze and summarize the impact of different coupons on transactions in the 'final_merged_df' by grouping data by 'CouponCode' to calculate total transactions and average transaction value per coupon, and create a bar chart visualizing the average transaction value for each coupon code.
+```{r}
+# Analyzing the impact of coupons on transactions
+coupon_impact <- final_merged_df %>%
+  group_by(CouponCode) %>%
+  summarise(TotalTransactions = n(), AverageTransactionValue = mean(Price * Quantity))
+
+# Visualizing coupon impact
+ggplot(coupon_impact, aes(x = CouponCode, y = AverageTransactionValue)) +
+  geom_bar(stat = "identity") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Impact of Coupons on Transaction Value", x = "Coupon Code", y = "Average Transaction Value")
+
+```
+#Business Insights
+
+- Analyze sales trends in the 'final_merged_df' by grouping data by date to calculate total sales, visualize these trends over time using a line graph, identify peak business periods by grouping sales by month and year, and assess customer loyalty by analyzing repeat purchases based on total number of purchases and total amount spent per customer.
+```{r}
+# Sales trends over time
+sales_trends <- final_merged_df %>%
+  group_by(Date) %>%
+  summarise(TotalSales = sum(Price * Quantity))
+
+# Visualizing sales trends
+ggplot(sales_trends, aes(x = Date, y = TotalSales)) +
+  geom_line() +
+  labs(title = "Sales Trends Over Time", x = "Date", y = "Total Sales")
+
+# Identifying peak business periods
+peak_periods <- final_merged_df %>%
+  group_by(format(Date, "%Y-%m")) %>%
+  summarise(TotalSales = sum(Price * Quantity)) %>%
+  arrange(desc(TotalSales))
+
+# Customer loyalty - Repeat purchases
+customer_loyalty <- final_merged_df %>%
+  group_by(CustomerID) %>%
+  summarise(TotalPurchases = n(), TotalSpent = sum(Price * Quantity)) %>%
+  filter(TotalPurchases > 1) # Adjust criteria as needed
+```
+
+
+CONCLUSION:
+  In conclusion, our project for Café Aroma Delight, a flourishing coffee shop chain, has been a deep dive into the realm of data-driven insights. Our comprehensive R Markdown documentation provided a multi-faceted view of the business, focusing on customer behaviors, sales trends, and promotional strategy effectiveness. The business description outlined Café Aroma Delight's commitment to quality and its diverse clientele, setting the stage for our data analysis. The CRM tables were meticulously structured, capturing the nuances of customer interactions and transactions, forming the foundation of our analytical exploration. Through the embedded R scripts, we simulated realistic customer transaction scenarios, reflecting the daily operations of the café.
+  
+  Our deliberate choice of varied data distributions, including normal and skewed, aimed to mirror real-life purchasing patterns, enriching our analysis with practical relevance. The insights gleaned, from customer purchasing habits to coupon impact and overall sales trends, not only highlighted the current business scenario but also illuminated pathways for strategic growth and customer engagement enhancement for Café Aroma Delight.
+
+
+

@@ -1,0 +1,159 @@
+---
+title: "Chi-Square Test and ANOVA"
+output:
+  html_document: default
+  pdf_document: default
+date: "2024-01-30"
+---
+                              MODULE_3-ASSIGNMENT
+                              ARAVIND KORUTLA
+# INTRODUCTION
+This project undertakes a statistical analysis of consumer complaints about price hikes in New York State during 2020-2021. Utilizing data obtained through a Freedom of Information request, the study focuses on examining patterns in consumer grievances across various business categories and geographical locations. Employing Chi-Square and ANOVA statistical tests, the analysis aims to discern whether factors such as urbanization, time of year, poverty levels, racial composition, and geographical classification significantly influence the nature and frequency of complaints. This research provides insights into consumer behavior and market dynamics in the context of pricing issues.
+
+```{r include=FALSE}
+data<- read.csv("Price_Gouging_Assignment_Data.csv")
+library(tidyverse)
+library(dplyr)
+library(tibble)
+library(dplyr)
+head(data)
+dim(data)
+summary(data)
+names(data)
+view(data)
+```
+## Analyzing independence between Business Categories and Area Type (Urban/Rural/Semiurban)
+# using Chi-Square test to assess association.
+```{r}
+# Selecting top 5 most frequent Business Categories
+top_categories <- data %>% 
+  count(Business.Category) %>%
+  top_n(5) %>%
+  pull(Business.Category)
+
+# Filtering data for top categories
+data_filtered <- data %>%
+  filter(Business.Category %in% top_categories)
+
+# Creating a contingency table for Business Categories vs. Urban/Rural/Semiurban area
+table_urban <- table(data_filtered$Business.Category, data_filtered$Urban)
+
+# Chi-Square test
+chi_square_test <- chisq.test(table_urban)
+
+# Display the contingency table and test result
+table_urban
+chi_square_test
+```
+CONCLUSION: The Chi-Square test revealed no significant association between business categories and urban, rural, or semiurban area classifications (p-value = 0.1096). This indicates that the frequency of complaints in the top five business categories is not dependent on the area's urbanization level. Complaint patterns across these business categories appear to be similarly distributed irrespective of whether the area is urban, rural, or semiurban.
+
+## Examining if Business Categories' complaints are independent of the Quarter using Chi-Square test.
+# This test assesses the association between business categories and time of the year.
+
+```{r}
+# Creating a contingency table for Business Categories vs. Quarters
+table_quarter <- table(data_filtered$Business.Category, data_filtered$Quarter)
+
+# Chi-Square test
+chi_square_test_quarter <- chisq.test(table_quarter)
+
+# Display the contingency table and test result
+table_quarter
+chi_square_test_quarter
+
+```
+CONCLUSION: Analysis using a Chi-Square test showed no significant relationship between business categories and the quarter of the year (p-value = 0.4055). This suggests that the distribution of complaints among the top five business categories does not vary significantly across different quarters. The timing within the year does not appear to influence the complaint patterns associated with these business categories.
+
+# Analyzing the relationship between Business Categories and the top three cities with Chi-Square test.
+# This test evaluates if business complaint patterns vary significantly across major cities.
+
+```{r}
+# Identifing the top three cities based on the number of complaints
+top_cities <- data %>% 
+  count(City) %>%
+  top_n(3) %>%
+  pull(City)
+
+# Filter data for these top cities
+data_filtered_top_cities <- data_filtered %>%
+  filter(City %in% top_cities)
+
+# Creating a contingency table for Business Categories vs. Top Three Cities
+table_cities <- table(data_filtered_top_cities$Business.Category, data_filtered_top_cities$City)
+
+# Chi-Square test
+chi_square_test_cities <- chisq.test(table_cities)
+
+# Display the contingency table and test result
+table_cities
+chi_square_test_cities
+```
+CONCLUSION: The Chi-Square test indicated a highly significant association between business categories and the top three cities (p-value < 2.2e-16). This strongly suggests that the frequency and distribution of complaints across different business categories vary significantly among these cities. Each city exhibits a distinct pattern of complaints in relation to the top five business categories. The very low p-value points to a clear departure from the null hypothesis of independence, indicating that the city in which a business operates is a significant factor in the nature and volume of complaints it receives.
+
+# Assessing differences in complaint numbers across poverty categories using ANOVA.
+# This analysis determines if socio-economic status influences complaint frequency.
+```{r}
+# Grouping data by ZIP and calculating the number of complaints for each ZIP code
+data_grouped <- data %>%
+  group_by(ZIP) %>%
+  summarise(Number_of_Complaints = n())
+
+# Merging the grouped data with poverty_category
+data_merged <- merge(data_grouped, data[, c("ZIP", "poverty_category")], by = "ZIP", all.x = TRUE)
+
+# Remove duplicate rows if any
+data_merged <- data_merged %>% distinct()
+
+# Running ANOVA for poverty_category
+anova_poverty <- aov(Number_of_Complaints ~ poverty_category, data = data_merged)
+summary(anova_poverty)
+
+```
+CONCLUSION: The ANOVA test examining the relationship between the number of complaints and poverty categories yielded a statistically significant result (F-value = 11.44, p-value = 2.17e-05). This indicates that there are significant differences in the number of complaints across different poverty categories. The low p-value (well below the standard threshold of 0.05) strongly suggests that the variation in complaint numbers is not due to random chance but is associated with the poverty category of each ZIP code. Therefore, we can conclude that poverty category is a significant factor influencing the frequency of complaints in different ZIP codes.
+
+# Using ANOVA to evaluate if complaint numbers vary by caucasian_category.
+# This test investigates the impact of racial demographics on complaint patterns.
+```{r}
+# Grouping data by ZIP and calculate the number of complaints for each ZIP code
+data_grouped <- data %>%
+  group_by(ZIP) %>%
+  summarise(Number_of_Complaints = n())
+
+# Merge the grouped data with caucasian_category
+data_merged <- merge(data_grouped, data[, c("ZIP", "caucasian_category")], by = "ZIP", all.x = TRUE)
+
+# Remove duplicate rows if any
+data_merged <- data_merged %>% distinct()
+
+# Running ANOVA for caucasian_category
+anova_caucasian <- aov(Number_of_Complaints ~ caucasian_category, data = data_merged)
+summary(anova_caucasian)
+```
+CONCLUSION: The ANOVA test examining the impact of the caucasian category on the number of complaints demonstrates a statistically significant result (F-value = 5.431, p-value = 0.0052). This indicates that there are significant differences in the number of complaints across different caucasian categories. The p-value, being lower than the standard significance level of 0.05, suggests that these differences are unlikely to be due to chance. Therefore, we can conclude that the caucasian category is a significant factor in influencing the frequency of complaints in different ZIP codes.
+
+This conclusion provides evidence that the demographic composition, specifically the caucasian category, in different areas has a significant impact on the number of consumer complaints recorded.
+
+# Performing ANOVA to determine if urban classification affects complaint numbers.
+# This analysis explores the influence of urbanization level on consumer complaints.
+```{r}
+# Group data by ZIP and calculate the number of complaints for each ZIP code
+data_grouped <- data %>%
+  group_by(ZIP) %>%
+  summarise(Number_of_Complaints = n())
+
+# Merge the grouped data with the urban_category
+data_merged <- merge(data_grouped, data[, c("ZIP", "Urban")], by = "ZIP", all.x = TRUE)
+
+# Remove duplicate rows if any
+data_merged <- data_merged %>% distinct()
+
+# Running ANOVA for urban_category
+anova_urban <- aov(Number_of_Complaints ~ Urban, data = data_merged)
+summary(anova_urban)
+```
+CONCLUSION: The ANOVA test reveals a significant difference in complaint numbers based on urban classifications (urban, semi-urban, rural) with an F-value of 4.501 and a p-value of 0.0124. This significant result suggests that the urban category notably influences complaint frequencies in different ZIP codes, indicating that the geographical context substantially affects consumer experiences and complaint behaviors. The statistical significance of these findings underscores the importance of considering geographical classification in understanding consumer complaint patterns.
+
+## Final Conclusion of the Consumer Complaint Analysis Project:
+
+Our analysis of consumer complaints in New York State revealed several key insights. Chi-Square tests indicated that complaint frequencies across business categories are not significantly influenced by urbanization levels or quarterly changes, suggesting a uniformity in consumer grievances regardless of location or season. However, ANOVA tests unveiled significant differences in complaint volumes when analyzing socio-economic and demographic factors, including poverty and caucasian categories, as well as urban classification. These findings underscore the importance of considering socio-demographic variables in understanding consumer complaints about price hikes, offering valuable insights for policymakers, businesses, and consumer advocacy groups in addressing and mitigating consumer concerns.
+
